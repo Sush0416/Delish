@@ -1,15 +1,35 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const TiffinSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  type: { 
-    type: String, 
-    enum: ['veg', 'non-veg', 'jain', 'diet', 'weekly', 'monthly'], // allow all frontend filter types
-    default: 'veg' 
+const tiffinSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
   },
-  price: { type: Number, required: true },
-  image: { type: String, required: true },
-  restaurant: { type: String, required: true }
-}, { timestamps: true });
+  description: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['vegetarian', 'non-vegetarian', 'jain', 'eggetarian']
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  available: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
 
-module.exports = mongoose.model('Tiffin', TiffinSchema);
+const Tiffin = mongoose.model('Tiffin', tiffinSchema);
+
+export default Tiffin;

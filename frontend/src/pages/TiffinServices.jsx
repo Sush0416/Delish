@@ -1,95 +1,232 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, Grid, List, ChevronDown, Loader } from 'lucide-react';
-import TiffinPlanCard from '../components/TiffinPlanCard';
-import { useTiffin } from '../hooks/useTiffin';
+import axios from 'axios';
+import './TiffinServices.css';
 
 const TiffinServices = () => {
-  const [viewMode, setViewMode] = useState('grid');
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const { tiffinPlans, loading, error, getTiffinPlans, resetTiffinPlans, hasMore } = useTiffin();
-
-  const filters = [
-    { id: 'all', name: 'All Plans' },
-    { id: 'veg', name: 'Vegetarian' },
-    { id: 'non-veg', name: 'Non-Vegetarian' },
-    { id: 'jain', name: 'Jain' },
-    { id: 'diet', name: 'Diet' },
-    { id: 'weekly', name: 'Weekly' },
-    { id: 'monthly', name: 'Monthly' },
-    { id: 'daily', name: 'Daily' }
-  ];
+  const [tiffins, setTiffins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [subscribing, setSubscribing] = useState(null);
 
   useEffect(() => {
-    resetTiffinPlans({
-      type: selectedFilter !== 'all' ? selectedFilter : undefined,
-      search: searchTerm || undefined
-    });
-  }, [selectedFilter, searchTerm]);
+    fetchTiffins();
+  }, []);
+
+  const fetchTiffins = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:5000/api/tiffins');
+      setTiffins(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching tiffins:', err);
+      setError('Failed to load tiffin services. Using demo data.');
+      setTiffins(getDemoTiffins());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubscribe = async (tiffinId) => {
+    try {
+      setSubscribing(tiffinId);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const tiffinName = tiffins.find(t => t._id === tiffinId)?.name;
+      alert(`Successfully subscribed to ${tiffinName}! We'll contact you shortly.`);
+    } catch (error) {
+      alert('Subscription failed. Please try again.');
+    } finally {
+      setSubscribing(null);
+    }
+  };
+
+  // Using your exact image file names
+  const getDemoTiffins = () => [
+    {
+      _id: '1',
+      name: 'Veg Delight',
+      description: 'Healthy vegetarian meals with fresh vegetables, dal, roti, rice, and salad. Perfect for balanced nutrition.',
+      price: 150,
+      category: 'vegetarian',
+      image: '/images/tiffins/veg-delight.jpg',
+      available: true
+    },
+    {
+      _id: '2',
+      name: 'Protein Packed',
+      description: 'High protein meals with paneer, soy, legumes, sprouts and healthy grains. Build muscle and stay full.',
+      price: 200,
+      category: 'vegetarian',
+      image: '/images/tiffins/protein-packed.jpg',
+      available: true
+    },
+    {
+      _id: '3',
+      name: 'Non-Veg Special',
+      description: 'Delicious non-vegetarian meals with chicken curry, fish fry, or mutton options. Rich in flavor.',
+      price: 220,
+      category: 'non-vegetarian',
+      image: '/images/tiffins/non-veg-special.jpg',
+      available: true
+    },
+    {
+      _id: '4',
+      name: 'Jain Meals',
+      description: 'Pure vegetarian Jain meals without onion and garlic. Prepared with rootless vegetables only.',
+      price: 180,
+      category: 'jain',
+      image: '/images/tiffins/jain-meals.jpg',
+      available: true
+    },
+    {
+      _id: '5',
+      name: 'Eggetarian Delight',
+      description: 'Vegetarian meals with egg options like boiled eggs, egg curry, and omelets. Rich in protein.',
+      price: 170,
+      category: 'eggetarian',
+      image: '/images/tiffins/eggetarian-delight.jpg',
+      available: true
+    },
+    {
+      _id: '6',
+      name: 'Weight Loss Diet',
+      description: 'Specially curated low-calorie meals for weight management. Balanced nutrition with portion control.',
+      price: 250,
+      category: 'vegetarian',
+      image: '/images/tiffins/weight-loss-diet.jpg',
+      available: true
+    },
+    {
+      _id: '7',
+      name: 'South Indian Meals',
+      description: 'Authentic South Indian meals with sambar, rasam, curd rice, and variety of chutneys.',
+      price: 190,
+      category: 'vegetarian',
+      image: '/images/tiffins/south-indian-meals.jpg',
+      available: true
+    },
+    {
+      _id: '8',
+      name: 'Punjabi Tadka',
+      description: 'North Indian specialities with butter naan, paneer butter masala, dal tadka, and lassi.',
+      price: 210,
+      category: 'vegetarian',
+      image: '/images/tiffins/punjabi-tadka.jpg',
+      available: true
+    },
+    {
+      _id: '9',
+      name: 'Seafood Lovers',
+      description: 'Fresh seafood delights including fish curry, prawn masala, and crab preparations.',
+      price: 280,
+      category: 'non-vegetarian',
+      image: '/images/tiffins/seafood-lovers.jpg',
+      available: true
+    },
+    {
+      _id: '10',
+      name: 'Keto Diet Plan',
+      description: 'Low-carb, high-fat keto meals perfect for weight loss and maintaining ketosis.',
+      price: 300,
+      category: 'non-vegetarian',
+      image: '/images/tiffins/keto-diet-plan.jpg',
+      available: true
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading tiffin services...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header, Search, Filters ... same as previous code */}
+    <div className="tiffin-services">
+      <div className="container">
+        <h1 className="page-title">Our Tiffin Services</h1>
+        <p className="page-subtitle">Fresh, homemade meals delivered daily to your doorstep</p>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-        {/* Plans Grid */}
-        {error ? (
-          <motion.div className="text-center py-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <p className="text-red-500 text-lg">{error}</p>
-          </motion.div>
-        ) : tiffinPlans.length === 0 ? (
-          <motion.div className="text-center py-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <p className="text-gray-500 text-lg">No tiffin plans found.</p>
-          </motion.div>
-        ) : (
-          <motion.div
-            className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}
-            layout
-          >
-            <AnimatePresence>
-              {tiffinPlans.map((plan, index) => (
-                <motion.div
-                  key={plan._id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+        <div className="tiffin-grid">
+          {tiffins.map((tiffin) => (
+            <div key={tiffin._id} className="tiffin-card">
+              <div className="tiffin-image-container">
+                <img 
+                  src={tiffin.image} 
+                  alt={tiffin.name}
+                  className="tiffin-img"
+                  onError={(e) => {
+                    console.log(`Image failed to load: ${tiffin.image}`);
+                    e.target.style.display = 'none';
+                    const placeholder = e.target.nextElementSibling;
+                    if (placeholder) {
+                      placeholder.style.display = 'flex';
+                      const colors = {
+                        vegetarian: '#4CAF50',
+                        'non-vegetarian': '#F44336',
+                        jain: '#FF9800',
+                        eggetarian: '#2196F3'
+                      };
+                      placeholder.style.background = colors[tiffin.category] || '#667eea';
+                    }
+                  }}
+                />
+                <div className="image-placeholder">
+                  <div className="placeholder-icon">
+                    {tiffin.category === 'vegetarian' && '🥗'}
+                    {tiffin.category === 'non-vegetarian' && '🍗'}
+                    {tiffin.category === 'jain' && '🪷'}
+                    {tiffin.category === 'eggetarian' && '🥚'}
+                  </div>
+                  <div className="placeholder-text">{tiffin.name}</div>
+                  <div className="placeholder-subtext">Add image: {tiffin.image.split('/').pop()}</div>
+                </div>
+                <div className="tiffin-overlay">
+                  <span className={`tiffin-badge ${tiffin.category}`}>
+                    {tiffin.category}
+                  </span>
+                </div>
+              </div>
+              <div className="tiffin-info">
+                <h3 className="tiffin-name">{tiffin.name}</h3>
+                <p className="tiffin-description">{tiffin.description}</p>
+                <div className="tiffin-features">
+                  <span className="feature">🍛 Daily Fresh</span>
+                  <span className="feature">🚚 Free Delivery</span>
+                  <span className="feature">⏰ Timely Service</span>
+                </div>
+                <div className="tiffin-meta">
+                  <span className="price">₹{tiffin.price}/month</span>
+                  <span className="rating">⭐ 4.5/5</span>
+                </div>
+                <button 
+                  className={`subscribe-btn ${!tiffin.available ? 'disabled' : ''}`}
+                  onClick={() => handleSubscribe(tiffin._id)}
+                  disabled={!tiffin.available || subscribing === tiffin._id}
                 >
-                  <TiffinPlanCard plan={{ ...plan, image: plan.image || '/placeholder-food.png' }} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {/* Load More */}
-        {tiffinPlans.length > 0 && hasMore && (
-          <motion.div className="text-center mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.8 }}>
-            <motion.button
-              className="bg-white border-2 border-orange-500 text-orange-500 px-8 py-3 rounded-full font-semibold hover:bg-orange-500 hover:text-white transition-all shadow-lg flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => getTiffinPlans({
-                type: selectedFilter !== 'all' ? selectedFilter : undefined,
-                search: searchTerm || undefined
-              })}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load More Plans'
-              )}
-            </motion.button>
-          </motion.div>
-        )}
+                  {subscribing === tiffin._id ? (
+                    <>
+                      <div className="btn-spinner"></div>
+                      Processing...
+                    </>
+                  ) : tiffin.available ? (
+                    'Subscribe Now'
+                  ) : (
+                    'Out of Stock'
+                  )}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
