@@ -1,21 +1,23 @@
 {
-  "name": "delish-app",
+  "name": "delish",
   "version": "1.0.0",
+  "description": "Delish - Food Delivery App",
+  "main": "server/server.js",
   "scripts": {
-    "dev": "concurrently \"npm:server\" \"npm:client\"",
-    "server": "cd backend && npm run server",
+    "start": "node backend/server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
     "client": "cd frontend && npm start",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
     "install-server": "cd backend && npm install",
-    "install-client": "cd frontend && npm install"
+    "install-client": "cd frontend && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "heroku-postbuild": "npm run install-client && npm run build"
   },
+  "keywords": ["food", "delivery", "mern", "react", "node"],
+  "author": "Sush0416",
+  "license": "MIT",
   "devDependencies": {
     "concurrently": "^7.6.0"
-  },
-  "dependencies": {
-    "@stripe/react-stripe-js": "^5.0.0",
-    "@stripe/stripe-js": "^8.0.0",
-    "axios": "^1.12.2",
-    "react-router-dom": "^7.9.3"
   }
 }

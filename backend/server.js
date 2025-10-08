@@ -1,13 +1,36 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
+const connectDB = require('./config/database');
+const errorHandler = require('./middleware/errorHandler');
+
+// Connect to database
+connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Security middleware
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// CORS
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// Body parser middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
 
 // --- Tiffin Plans ---
 const tiffins = [
@@ -97,7 +120,13 @@ const restaurants = [
   },
 ];
 
-// --- Routes ---
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/restaurants', require('./routes/restaurants'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/users', require('./routes/users'));
+
+// Basic routes for now (will be replaced with proper routes)
 app.get('/api/tiffins', (req, res) => {
   const { type, search } = req.query;
   let filtered = tiffins;
@@ -123,6 +152,14 @@ app.get('/api/restaurants', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({ message: '🍱 Delish Backend is running successfully!' });
+});
+
+// Error handler middleware
+app.use(errorHandler);
+
+// Handle undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Route not found' });
 });
 
 // --- Server ---
