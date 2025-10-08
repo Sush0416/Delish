@@ -7,9 +7,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Tiffins data matching your image files
+// --- Tiffin Plans ---
 const tiffins = [
   {
     _id: '1',
@@ -18,7 +18,6 @@ const tiffins = [
     price: 150,
     category: 'vegetarian',
     image: '/images/tiffins/veg-delight.jpg',
-    available: true
   },
   {
     _id: '2',
@@ -27,7 +26,6 @@ const tiffins = [
     price: 200,
     category: 'vegetarian',
     image: '/images/tiffins/protein-packed.jpg',
-    available: true
   },
   {
     _id: '3',
@@ -36,7 +34,6 @@ const tiffins = [
     price: 220,
     category: 'non-vegetarian',
     image: '/images/tiffins/non-veg-special.jpg',
-    available: true
   },
   {
     _id: '4',
@@ -45,7 +42,6 @@ const tiffins = [
     price: 180,
     category: 'jain',
     image: '/images/tiffins/jain-meals.jpg',
-    available: true
   },
   {
     _id: '5',
@@ -54,7 +50,6 @@ const tiffins = [
     price: 170,
     category: 'eggetarian',
     image: '/images/tiffins/eggetarian-delight.jpg',
-    available: true
   },
   {
     _id: '6',
@@ -63,58 +58,77 @@ const tiffins = [
     price: 250,
     category: 'vegetarian',
     image: '/images/tiffins/weight-loss-diet.jpg',
-    available: true
   },
-  {
-    _id: '7',
-    name: 'South Indian Meals',
-    description: 'Authentic South Indian meals with sambar, rasam, and curd rice.',
-    price: 190,
-    category: 'vegetarian',
-    image: '/images/tiffins/south-indian-meals.jpg',
-    available: true
-  },
-  {
-    _id: '8',
-    name: 'Punjabi Tadka',
-    description: 'North Indian specialities with butter naan and paneer butter masala.',
-    price: 210,
-    category: 'vegetarian',
-    image: '/images/tiffins/punjabi-tadka.jpg',
-    available: true
-  },
-  {
-    _id: '9',
-    name: 'Seafood Lovers',
-    description: 'Fresh seafood delights including fish curry and prawn masala.',
-    price: 280,
-    category: 'non-vegetarian',
-    image: '/images/tiffins/seafood-lovers.jpg',
-    available: true
-  },
-  {
-    _id: '10',
-    name: 'Keto Diet Plan',
-    description: 'Low-carb, high-fat keto meals perfect for weight loss.',
-    price: 300,
-    category: 'non-vegetarian',
-    image: '/images/tiffins/keto-diet-plan.jpg',
-    available: true
-  }
 ];
 
-// Routes
+// --- Restaurants ---
+const restaurants = [
+  {
+    _id: 'r1',
+    name: 'SpiceBox Kitchen',
+    description: 'Delicious home-style Indian meals with daily menu rotations.',
+    rating: 4.6,
+    location: 'Mumbai',
+    image: '/images/restaurants/spicebox-kitchen.jpg',
+  },
+  {
+    _id: 'r2',
+    name: 'GreenLeaf Tiffins',
+    description: 'Wholesome vegetarian and vegan tiffins made fresh daily.',
+    rating: 4.8,
+    location: 'Pune',
+    image: '/images/restaurants/greenleaf-tiffins.jpg',
+  },
+  {
+    _id: 'r3',
+    name: 'Tandoori Treats',
+    description: 'Authentic Punjabi non-veg meals with smoky flavors and soft rotis.',
+    rating: 4.7,
+    location: 'Delhi',
+    image: '/images/restaurants/tandoori-treats.jpg',
+  },
+  {
+    _id: 'r4',
+    name: 'South Feast',
+    description: 'Traditional South Indian thali with sambhar, rasam, and curd rice.',
+    rating: 4.5,
+    location: 'Chennai',
+    image: '/images/restaurants/south-feast.jpg',
+  },
+];
+
+// --- Routes ---
 app.get('/api/tiffins', (req, res) => {
-  res.json(tiffins);
+  const { type, search } = req.query;
+  let filtered = tiffins;
+
+  if (type && type !== 'all') {
+    filtered = filtered.filter(t => t.category.toLowerCase() === type.toLowerCase());
+  }
+
+  if (search) {
+    const term = search.toLowerCase();
+    filtered = filtered.filter(t =>
+      t.name.toLowerCase().includes(term) ||
+      t.description.toLowerCase().includes(term)
+    );
+  }
+
+  res.json({ plans: filtered, total: filtered.length });
+});
+
+app.get('/api/restaurants', (req, res) => {
+  res.json(restaurants);
 });
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Delish Backend is running!' });
+  res.json({ message: '🍱 Delish Backend is running successfully!' });
 });
 
+// --- Server ---
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`✅ Tiffins API: http://localhost:${PORT}/api/tiffins`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Tiffins API → http://localhost:${PORT}/api/tiffins`);
+  console.log(`✅ Restaurants API → http://localhost:${PORT}/api/restaurants`);
 });

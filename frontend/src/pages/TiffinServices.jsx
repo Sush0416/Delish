@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TiffinServices.css';
+import { useNavigate } from 'react-router-dom';
+import { Loader } from 'lucide-react';
 
 const TiffinServices = () => {
   const [tiffins, setTiffins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [subscribing, setSubscribing] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTiffins();
@@ -16,11 +19,12 @@ const TiffinServices = () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/tiffins');
-      setTiffins(response.data);
+      const plans = response.data.plans.map(t => ({ ...t, available: true }));
+      setTiffins(plans);
       setError(null);
     } catch (err) {
       console.error('Error fetching tiffins:', err);
-      setError('Failed to load tiffin services. Using demo data.');
+      setError();
       setTiffins(getDemoTiffins());
     } finally {
       setLoading(false);
@@ -30,17 +34,24 @@ const TiffinServices = () => {
   const handleSubscribe = async (tiffinId) => {
     try {
       setSubscribing(tiffinId);
+
+      // Simulate a short delay for processing
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const tiffinName = tiffins.find(t => t._id === tiffinId)?.name;
-      alert(`Successfully subscribed to ${tiffinName}! We'll contact you shortly.`);
+
+      const tiffin = tiffins.find(t => t._id === tiffinId);
+      if (!tiffin) throw new Error('Tiffin not found');
+
+      // Navigate to Subscribe page with selected tiffin
+      navigate('/subscribe', { state: { selectedTiffin: tiffin } });
+
     } catch (error) {
-      alert('Subscription failed. Please try again.');
+      alert('❌ Subscription failed. Please try again.');
+      console.error(error);
     } finally {
       setSubscribing(null);
     }
   };
 
-  // Using your exact image file names
   const getDemoTiffins = () => [
     {
       _id: '1',
@@ -144,15 +155,14 @@ const TiffinServices = () => {
   }
 
   return (
-    <div className="tiffin-services">
+    <div className="tiffin-services pt-28">
+
       <div className="container">
         <h1 className="page-title">Our Tiffin Services</h1>
         <p className="page-subtitle">Fresh, homemade meals delivered daily to your doorstep</p>
         
         {error && (
-          <div className="error-message">
-            {error}
-          </div>
+          <div className="error-message">{error}</div>
         )}
 
         <div className="tiffin-grid">
@@ -164,7 +174,6 @@ const TiffinServices = () => {
                   alt={tiffin.name}
                   className="tiffin-img"
                   onError={(e) => {
-                    console.log(`Image failed to load: ${tiffin.image}`);
                     e.target.style.display = 'none';
                     const placeholder = e.target.nextElementSibling;
                     if (placeholder) {
@@ -187,7 +196,6 @@ const TiffinServices = () => {
                     {tiffin.category === 'eggetarian' && '🥚'}
                   </div>
                   <div className="placeholder-text">{tiffin.name}</div>
-                  <div className="placeholder-subtext">Add image: {tiffin.image.split('/').pop()}</div>
                 </div>
                 <div className="tiffin-overlay">
                   <span className={`tiffin-badge ${tiffin.category}`}>
@@ -220,7 +228,7 @@ const TiffinServices = () => {
                   ) : tiffin.available ? (
                     'Subscribe Now'
                   ) : (
-                    'Out of Stock'
+                    'Subscribed'
                   )}
                 </button>
               </div>

@@ -17,40 +17,53 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useLocalStorage('delish-cart', []);
   const [restaurantId, setRestaurantId] = useLocalStorage('delish-restaurant', null);
 
-  // Clear cart when component mounts (for development)
+  // Clear cart when restaurant changes (for development)
   useEffect(() => {
-    // Uncomment the line below to clear cart on page refresh during development
-    // setCartItems([]);
-  }, []);
+    // If you want to clear cart when switching restaurants, uncomment:
+    // if (restaurantId && cartItems.length > 0 && cartItems[0].restaurant?.id !== restaurantId) {
+    //   setCartItems([]);
+    // }
+  }, [restaurantId, cartItems, setCartItems]);
 
-  const addToCart = (item, restaurant) => {
+  const addToCart = (item, restaurant, modifiers = []) => {
     setCartItems(prevItems => {
       // If adding from a different restaurant, clear the cart
       if (restaurantId && restaurantId !== restaurant.id) {
         setRestaurantId(restaurant.id);
-        return [{ ...item, restaurant }];
+        return [{ 
+          ...item, 
+          restaurant,
+          modifiers,
+          quantity: item.quantity || 1 
+        }];
       }
 
-      setRestaurantId(restaurant.id);
+      // Set restaurant ID if not set
+      if (!restaurantId) {
+        setRestaurantId(restaurant.id);
+      }
       
-      const existingItem = prevItems.find(i => 
+      // Check if item already exists with same modifiers
+      const existingItemIndex = prevItems.findIndex(i => 
         i.id === item.id && 
-        JSON.stringify(i.modifiers) === JSON.stringify(item.modifiers)
+        JSON.stringify(i.modifiers) === JSON.stringify(modifiers)
       );
 
-      if (existingItem) {
-        return prevItems.map(i =>
-          i.id === item.id && 
-          JSON.stringify(i.modifiers) === JSON.stringify(item.modifiers)
-            ? { ...i, quantity: i.quantity + (item.quantity || 1) }
-            : i
-        );
+      if (existingItemIndex > -1) {
+        const updatedItems = [...prevItems];
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + (item.quantity || 1)
+        };
+        return updatedItems;
       }
       
+      // Add new item
       return [...prevItems, { 
         ...item, 
         quantity: item.quantity || 1,
-        restaurant 
+        restaurant,
+        modifiers
       }];
     });
   };
@@ -62,6 +75,11 @@ export const CartProvider = ({ children }) => {
           JSON.stringify(item.modifiers) === JSON.stringify(modifiers))
       )
     );
+
+    // Clear restaurant ID if cart becomes empty
+    if (cartItems.length === 1) {
+      setRestaurantId(null);
+    }
   };
 
   const updateQuantity = (itemId, quantity, modifiers = []) => {
@@ -111,13 +129,14 @@ export const CartProvider = ({ children }) => {
     if (!restaurant) return 0;
 
     const subtotal = getCartTotal();
-    const minOrder = restaurant.deliveryInfo?.minOrder || 0;
+    const minOrder = restaurant.minOrder || restaurant.deliveryInfo?.minOrder || 0;
     
+    // Return delivery fee only if minimum order is met
     if (subtotal < minOrder) {
-      return 0; // Will show warning about minimum order
+      return restaurant.deliveryInfo?.deliveryFee || restaurant.deliveryFee || 0;
     }
 
-    return restaurant.deliveryInfo?.deliveryFee || 0;
+    return restaurant.deliveryInfo?.deliveryFee || restaurant.deliveryFee || 0;
   };
 
   const getTax = () => {
@@ -133,13 +152,13 @@ export const CartProvider = ({ children }) => {
   };
 
   const meetsMinimumOrder = () => {
-    if (cartItems.length === 0) return true;
+    if (cartItems.length === 0) return false;
     
     const restaurant = cartItems[0]?.restaurant;
-    if (!restaurant) return true;
+    if (!restaurant) return false;
 
     const subtotal = getCartTotal();
-    const minOrder = restaurant.deliveryInfo?.minOrder || 0;
+    const minOrder = restaurant.minOrder || restaurant.deliveryInfo?.minOrder || 0;
     
     return subtotal >= minOrder;
   };
@@ -148,7 +167,13 @@ export const CartProvider = ({ children }) => {
     if (cartItems.length === 0) return 0;
     
     const restaurant = cartItems[0]?.restaurant;
-    return restaurant?.deliveryInfo?.minOrder || 0;
+    return restaurant?.minOrder || restaurant?.deliveryInfo?.minOrder || 0;
+  };
+
+  // Get current restaurant from cart
+  const getCurrentRestaurant = () => {
+    if (cartItems.length === 0) return null;
+    return cartItems[0]?.restaurant;
   };
 
   const value = {
@@ -165,7 +190,8 @@ export const CartProvider = ({ children }) => {
     getTax,
     getGrandTotal,
     meetsMinimumOrder,
-    getMinimumOrderAmount
+    getMinimumOrderAmount,
+    getCurrentRestaurant
   };
 
   return (

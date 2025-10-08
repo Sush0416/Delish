@@ -1,0 +1,40 @@
+/* src/pages/ThankYou.css */
+.thankyou-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0fff4;
+  padding: 2rem;
+}
+
+.thankyou-card {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.thankyou-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.thankyou-card h1, .thankyou-card h2 {
+  margin-bottom: 0.5rem;
+}
+
+.thankyou-card p {
+  margin-bottom: 1rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.thankyou-card button {
+  cursor: pointer;
+}

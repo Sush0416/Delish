@@ -1,23 +1,22 @@
-import React from 'react';
+import { useNavigate } from "react-router-dom";
 
 const TiffinPlanCard = ({ plan }) => {
-  return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-      {/* Image with restaurant overlay */}
-      <div className="relative h-48 w-full">
-        <img src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
-        <p className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded">
-          {plan.restaurant}
-        </p>
-      </div>
+  const navigate = useNavigate();
 
-      {/* Info */}
+  return (
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+      <img src={plan.image} alt={plan.name} className="w-full h-48 object-cover" />
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-800">{plan.name}</h3>
-        <p className="mt-2 font-bold text-orange-500 text-lg">₹{plan.price}</p>
+        <h3 className="font-semibold text-lg">{plan.name}</h3>
+        <p className="text-sm text-gray-500">{plan.restaurant}</p>
+        <p className="font-bold text-orange-500 mt-2">₹{plan.price}</p>
+        <button
+          onClick={() => navigate("/subscribe", { state: { plan } })}
+          className="mt-3 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg w-full"
+        >
+          Subscribe
+        </button>
       </div>
     </div>
   );
 };
-
-export default TiffinPlanCard;

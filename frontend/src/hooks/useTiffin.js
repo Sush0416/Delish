@@ -8,6 +8,8 @@ export const useTiffin = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
   const getTiffinPlans = async ({ type, search } = {}, reset = false) => {
     try {
       setLoading(true);
@@ -18,16 +20,16 @@ export const useTiffin = () => {
       if (type) params.type = type;
       if (search) params.search = search;
 
-      const res = await axios.get('http://localhost:5000/api/tiffins', { params });
+      const res = await axios.get(`${API_BASE}/api/tiffins`, { params });
       const newPlans = res.data.plans;
 
       setTiffinPlans(prev => reset ? newPlans : [...prev, ...newPlans]);
       setPage(currentPage + 1);
-      setHasMore(res.data.total > ((currentPage) * 6));
-      setLoading(false);
+      setHasMore(res.data.total > (currentPage * 6));
     } catch (err) {
       console.error(err);
       setError('Failed to fetch tiffin plans.');
+    } finally {
       setLoading(false);
     }
   };
